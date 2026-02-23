@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UniSpot Backend (Next.js App Router)
 
-## Getting Started
+## Base URL
+- `http://localhost:3000`
 
-First, run the development server:
+## Auth
+- Protected routes use: `Authorization: Bearer <token>`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Common Error Shape
+```json
+{
+  "statusCode": 400,
+  "message": "Error message",
+  "error": "Bad Request"
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Health
+- `GET /api/health`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Auth
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
+- `PATCH /auth/me`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Me / Profile
+- `GET /me`
+- `PATCH /me`
+- `PATCH /me/password`
+- `GET /me/wallet`
 
-## Learn More
+## Dashboards
+- `GET /dashboard/summary` (STUDENT)
+- `GET /admin/dashboard/summary` (ADMIN)
 
-To learn more about Next.js, take a look at the following resources:
+## Courses
+- `GET /courses`
+- `POST /courses` (STUDENT)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Teachers
+- `GET /courses/:id/teachers`
+- `POST /courses/:id/teachers` (ADMIN)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Study Sheets
+- `POST /study-sheets` (STUDENT)
+- `GET /study-sheets`
+- `GET /study-sheets/mine` (STUDENT)
+- `GET /study-sheets/purchased` (STUDENT)
+- `POST /study-sheets/:id/purchase` (STUDENT)
+- `PATCH /study-sheets/:id` (STUDENT owner)
+- `DELETE /study-sheets/:id` (STUDENT owner)
 
-## Deploy on Vercel
+## Study Sheet Moderation
+- `GET /moderation/study-sheets?status=PENDING|APPROVED|REJECTED` (STAFF/ADMIN)
+- `POST /moderation/study-sheets/:id/approve` (STAFF/ADMIN)
+- `POST /moderation/study-sheets/:id/reject` (STAFF/ADMIN)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Admin Payments
+- `GET /admin/payments?status=PENDING|APPROVED|RELEASED` (ADMIN)
+- `POST /admin/payments/:id/confirm` (ADMIN)
+- `POST /admin/payments/:id/release` (ADMIN)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Lease Listings
+- `GET /lease-listings`
+- `GET /lease-listings/mine` (STUDENT)
+- `POST /lease-listings` (STUDENT)
+- `PATCH /lease-listings/:id` (STUDENT owner)
+- `DELETE /lease-listings/:id` (STUDENT owner)
+- `POST /lease-listings/:id/interest` (STUDENT)
+- `POST /lease-listings/:id/transfer` (STUDENT owner or ADMIN)
+
+## Lease Moderation
+- `GET /moderation/lease-listings?status=PENDING|APPROVED|REJECTED` (STAFF/ADMIN)
+- `POST /moderation/lease-listings/:id/approve` (STAFF/ADMIN)
+- `POST /moderation/lease-listings/:id/reject` (STAFF/ADMIN)
+
+## Course Reviews
+- `GET /courses/:id/reviews`
+- `POST /reviews` (STUDENT)
+- `PATCH /reviews/:id` (STUDENT owner)
+- `DELETE /reviews/:id` (STUDENT owner)
+- `POST /reviews/:id/report` (STUDENT)
+- `POST /reviews/:id/upvote` (STUDENT)
+- `DELETE /reviews/:id/upvote` (STUDENT)
+
+## Review Moderation
+- `GET /moderation/reviews?status=VISIBLE|UNDER_REVIEW|REMOVED` (STAFF/ADMIN)
+- `POST /moderation/reviews/:id/approve` (STAFF/ADMIN)
+- `POST /moderation/reviews/:id/remove` (STAFF/ADMIN)
+
+## Teacher Reviews
+- `GET /courses/:id/teacher-reviews` (public, optional JWT)
+- `GET /courses/:id/teachers/:teacherId/reviews` (public)
+- `POST /teacher-reviews` (STUDENT)
+- `PATCH /teacher-reviews/:id` (STUDENT owner)
+- `DELETE /teacher-reviews/:id` (STUDENT owner)
+- `POST /teacher-reviews/:id/report` (STUDENT)
+- `POST /teacher-reviews/:id/upvote` (STUDENT)
+- `DELETE /teacher-reviews/:id/upvote` (STUDENT)
+
+## Teacher Review Moderation
+- `GET /moderation/teacher-reviews?status=VISIBLE|UNDER_REVIEW|REMOVED` (STAFF/ADMIN)
+- `POST /moderation/teacher-reviews/:id/approve` (STAFF/ADMIN)
+- `POST /moderation/teacher-reviews/:id/remove` (STAFF/ADMIN)
+
+## Withdrawals
+- `POST /withdrawals` (STUDENT)
+- `GET /withdrawals/mine` (STUDENT)
+- `GET /withdrawals?status=PENDING|APPROVED|REJECTED` (ADMIN)
+- `POST /withdrawals/:id/approve` (ADMIN)
+- `POST /withdrawals/:id/reject` (ADMIN)
+
+## Environment Variables
+- `MONGODB_URI`
+- `JWT_SECRET` (optional, defaults to `dev-secret`)
+- `PROMPTPAY_PHONE`
+- `CORS_ORIGIN`
+
+## Default Test Accounts (Local Dev)
+- Admin
+  - Email: `admin@unispot.local`
+  - Password: `Admin@12345`
+- Staff
+  - Email: `staff@unispot.local`
+  - Password: `Staff@12345`
+- Notes
+  - These accounts exist only in your current MongoDB instance.
+  - Change passwords before using outside local development.
+
+## Run Locally
+```bash
+npm install
+npm run dev
+```
+
+## Create DB Indexes
+```bash
+npm run db:indexes
+```
