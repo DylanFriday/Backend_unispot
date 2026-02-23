@@ -29,7 +29,6 @@ export async function POST(
         studySheetId,
         actorId: currentUser.userId,
         status: "APPROVED",
-        reason: null,
       }),
     );
 
