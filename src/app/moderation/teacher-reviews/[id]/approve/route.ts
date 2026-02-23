@@ -1,4 +1,4 @@
-import { MongoServerError } from "mongodb";
+import { MongoServerError, type Collection, type ClientSession } from "mongodb";
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth/requireAuth";
@@ -35,11 +35,8 @@ type AuditLogDoc = {
 async function findOrCreateTeacherByNameTx(
   name: string,
   deps: {
-    teachers: {
-      findOne: (f: Record<string, unknown>, o?: { projection?: Record<string, unknown>; session?: unknown }) => Promise<TeacherDoc | null>;
-      insertOne: (doc: Record<string, unknown>, o?: { session?: unknown }) => Promise<unknown>;
-    };
-    session: unknown;
+    teachers: Collection<TeacherDoc>;
+    session: ClientSession;
   },
 ): Promise<TeacherDoc | null> {
   const existing = await deps.teachers.findOne(
@@ -48,7 +45,7 @@ async function findOrCreateTeacherByNameTx(
   );
   if (existing) return existing;
 
-  const teacherId = await getNextSequenceValue("teachers", deps.session as never);
+  const teacherId = await getNextSequenceValue("teachers", deps.session);
   try {
     await deps.teachers.insertOne({ id: teacherId, name }, { session: deps.session });
     return { id: teacherId, name };
