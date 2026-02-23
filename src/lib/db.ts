@@ -30,29 +30,32 @@ function extractDbName(connectionUri: string): string {
   }
 }
 
-let cache = globalForMongo.__mongoCache;
+function getOrCreateCache(): GlobalMongoCache {
+  const existingCache = globalForMongo.__mongoCache;
+  if (existingCache) {
+    return existingCache;
+  }
 
-if (!cache) {
   const uri = getMongoUri();
   const client = new MongoClient(uri);
-  cache = {
+  const newCache: GlobalMongoCache = {
     client,
     clientPromise: client.connect(),
   };
 
   if (process.env.NODE_ENV !== "production") {
-    globalForMongo.__mongoCache = cache;
+    globalForMongo.__mongoCache = newCache;
   }
+
+  return newCache;
 }
 
-const mongoCache = cache;
-
 export function getClient(): Promise<MongoClient> {
-  return mongoCache.clientPromise;
+  return getOrCreateCache().clientPromise;
 }
 
 export function getDb(): Db {
   const uri = getMongoUri();
   const dbName = extractDbName(uri);
-  return mongoCache.client.db(dbName);
+  return getOrCreateCache().client.db(dbName);
 }
