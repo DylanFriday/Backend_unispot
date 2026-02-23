@@ -1,4 +1,4 @@
-import { type ClientSession } from "mongodb";
+import { type ClientSession, type Db } from "mongodb";
 
 import { apiError } from "@/lib/errors";
 import { getNextSequenceValue, type StudySheetDoc } from "@/modules/study-sheets/utils";
@@ -24,45 +24,30 @@ type StudySheetApprovalDoc = {
 };
 
 export async function moderateStudySheet(
-  db: {
-    collection: <T = unknown>(name: string) => {
-      findOne: (filter: Record<string, unknown>, options?: { session?: ClientSession }) => Promise<T | null>;
-      findOneAndUpdate: (
-        filter: Record<string, unknown>,
-        update: Record<string, unknown>,
-        options?: { returnDocument?: "before" | "after"; session?: ClientSession },
-      ) => Promise<T | null>;
-      updateOne: (
-        filter: Record<string, unknown>,
-        update: Record<string, unknown>,
-        options?: { upsert?: boolean; session?: ClientSession },
-      ) => Promise<unknown>;
-      insertOne: (doc: Record<string, unknown>, options?: { session?: ClientSession }) => Promise<unknown>;
-    };
-  },
+  db: Db,
   session: ClientSession,
-  input: {
+  params: {
     studySheetId: number;
     actorId: number;
     status: "APPROVED" | "REJECTED";
-    reason: string | null;
+    reason?: string;
   },
 ): Promise<StudySheetDoc> {
   const studySheets = db.collection<StudySheetDoc>("study_sheets");
   const approvals = db.collection<StudySheetApprovalDoc>("study_sheet_approvals");
   const auditLogs = db.collection<AuditLogDoc>("audit_logs");
 
-  const existing = await studySheets.findOne({ id: input.studySheetId }, { session });
+  const existing = await studySheets.findOne({ id: params.studySheetId }, { session });
   if (!existing) {
     throw apiError(404, "Study sheet not found", "Not Found");
   }
 
   const now = new Date();
   const updated = await studySheets.findOneAndUpdate(
-    { id: input.studySheetId },
+    { id: params.studySheetId },
     {
       $set: {
-        status: input.status,
+        status: params.status,
         updatedAt: now,
       },
     },
@@ -75,17 +60,17 @@ export async function moderateStudySheet(
 
   const approvalId = await getNextSequenceValue("study_sheet_approvals", session);
   await approvals.updateOne(
-    { studySheetId: input.studySheetId },
+    { studySheetId: params.studySheetId },
     {
       $setOnInsert: {
         id: approvalId,
-        studySheetId: input.studySheetId,
+        studySheetId: params.studySheetId,
         createdAt: now,
       },
       $set: {
-        reviewerId: input.actorId,
-        decision: input.status,
-        reason: input.reason,
+        reviewerId: params.actorId,
+        decision: params.status,
+        reason: params.reason ?? null,
         updatedAt: now,
       },
     },
@@ -101,13 +86,13 @@ export async function moderateStudySheet(
   await auditLogs.insertOne(
     {
       id: auditId,
-      actorId: input.actorId,
+      actorId: params.actorId,
       action:
-        input.status === "APPROVED"
+        params.status === "APPROVED"
           ? "STUDY_SHEET_APPROVED"
           : "STUDY_SHEET_REJECTED",
       entityType: "STUDY_SHEET",
-      entityId: input.studySheetId,
+      entityId: params.studySheetId,
       amount,
       createdAt: now,
     },
