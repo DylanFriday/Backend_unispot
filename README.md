@@ -67,8 +67,6 @@
 - `POST /lease-listings` (STUDENT)
 - `PATCH /lease-listings/:id` (STUDENT owner)
 - `DELETE /lease-listings/:id` (STUDENT owner)
-- `POST /lease-listings/:id/interest` (STUDENT)
-- `POST /lease-listings/:id/transfer` (STUDENT owner or ADMIN)
 
 ## Lease Moderation
 - `GET /moderation/lease-listings?status=PENDING|APPROVED|REJECTED` (STAFF/ADMIN)
