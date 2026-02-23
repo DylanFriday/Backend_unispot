@@ -1,4 +1,4 @@
-import { type ClientSession } from "mongodb";
+import { type ClientSession, type Db } from "mongodb";
 
 import { apiError } from "@/lib/errors";
 import { getNextSequenceValue } from "@/modules/study-sheets/utils";
@@ -23,44 +23,30 @@ type AuditLogDoc = {
 };
 
 export async function moderateLeaseListing(
-  db: {
-    collection: <T = unknown>(name: string) => {
-      findOne: (filter: Record<string, unknown>, options?: { session?: ClientSession }) => Promise<T | null>;
-      findOneAndUpdate: (
-        filter: Record<string, unknown>,
-        update: Record<string, unknown>,
-        options?: { returnDocument?: "before" | "after"; session?: ClientSession },
-      ) => Promise<T | null>;
-      deleteOne: (
-        filter: Record<string, unknown>,
-        options?: { session?: ClientSession },
-      ) => Promise<unknown>;
-      insertOne: (doc: Record<string, unknown>, options?: { session?: ClientSession }) => Promise<unknown>;
-    };
-  },
+  db: Db,
   session: ClientSession,
-  input: {
+  params: {
     leaseListingId: number;
     actorId: number;
-    status: "APPROVED" | "REJECTED";
-    reason: string | null;
+    status: string;
+    reason?: string | null;
   },
 ): Promise<LeaseListingDoc> {
   const leaseListings = db.collection<LeaseListingDoc>("lease_listings");
   const leaseApprovals = db.collection<LeaseApprovalDoc>("lease_approvals");
   const auditLogs = db.collection<AuditLogDoc>("audit_logs");
 
-  const existing = await leaseListings.findOne({ id: input.leaseListingId }, { session });
+  const existing = await leaseListings.findOne({ id: params.leaseListingId }, { session });
   if (!existing) {
     throw apiError(404, "Lease listing not found", "Not Found");
   }
 
   const now = new Date();
   const updated = await leaseListings.findOneAndUpdate(
-    { id: input.leaseListingId },
+    { id: params.leaseListingId },
     {
       $set: {
-        status: input.status,
+        status: params.status,
         updatedAt: now,
       },
     },
@@ -70,15 +56,15 @@ export async function moderateLeaseListing(
     throw apiError(404, "Lease listing not found", "Not Found");
   }
 
-  await leaseApprovals.deleteOne({ leaseListingId: input.leaseListingId }, { session });
+  await leaseApprovals.deleteOne({ leaseListingId: params.leaseListingId }, { session });
   const approvalId = await getNextSequenceValue("lease_approvals", session);
   await leaseApprovals.insertOne(
     {
       id: approvalId,
-      leaseListingId: input.leaseListingId,
-      reviewerId: input.actorId,
-      decision: input.status,
-      reason: input.reason,
+      leaseListingId: params.leaseListingId,
+      reviewerId: params.actorId,
+      decision: params.status as "APPROVED" | "REJECTED",
+      reason: params.reason ?? null,
       createdAt: now,
     },
     { session },
@@ -88,13 +74,13 @@ export async function moderateLeaseListing(
   await auditLogs.insertOne(
     {
       id: auditId,
-      actorId: input.actorId,
+      actorId: params.actorId,
       action:
-        input.status === "APPROVED"
+        params.status === "APPROVED"
           ? "LEASE_LISTING_APPROVED"
           : "LEASE_LISTING_REJECTED",
       entityType: "LEASE_LISTING",
-      entityId: input.leaseListingId,
+      entityId: params.leaseListingId,
       createdAt: now,
     },
     { session },
