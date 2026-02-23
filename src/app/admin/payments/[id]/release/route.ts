@@ -5,13 +5,9 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { apiError } from "@/lib/errors";
 import { withTransaction } from "@/lib/tx";
 import { getNextSequenceValue } from "@/modules/study-sheets/utils";
+import { type UserDoc } from "@/modules/users/types";
 
 import { toPaymentResponse, type PaymentDoc } from "@/app/admin/payments/route";
-
-type UserDoc = {
-  id?: unknown;
-  walletBalance?: unknown;
-};
 
 type AuditLogDoc = {
   id?: unknown;

@@ -4,15 +4,12 @@ import { requireAuth } from "@/lib/auth/requireAuth";
 import { requireRole } from "@/lib/auth/requireRole";
 import { apiError } from "@/lib/errors";
 import { withTransaction } from "@/lib/tx";
+import { type UserDoc } from "@/modules/users/types";
 import {
   parseWithdrawalId,
   toWithdrawalResponse,
   type WithdrawalDoc,
 } from "@/modules/withdrawals/utils";
-
-type UserDoc = {
-  id?: unknown;
-};
 
 export async function POST(
   req: Request,

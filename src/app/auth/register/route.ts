@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { apiError } from "@/lib/errors";
 import { validateJson } from "@/lib/validate";
 import { registerBodySchema } from "@/modules/auth/schemas";
+import { type UserDoc } from "@/modules/users/types";
 
 type CounterDoc = {
   _id: string;
@@ -30,7 +31,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     const body = await validateJson(req, registerBodySchema);
     const db = getDb();
-    const users = db.collection("users");
+    const users = db.collection<UserDoc>("users");
 
     const existingUser = await users.findOne(
       { email: body.email },
@@ -54,6 +55,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       role: "STUDENT",
       name: body.name,
       passwordHash,
+      walletBalance: 0,
       avatarUrl: null,
       phone: null,
       bio: null,

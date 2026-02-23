@@ -7,19 +7,12 @@ import { apiError } from "@/lib/errors";
 import { withTransaction } from "@/lib/tx";
 import { validateJson } from "@/lib/validate";
 import { getNextSequenceValue } from "@/modules/study-sheets/utils";
+import { type UserDoc } from "@/modules/users/types";
 import {
   createWithdrawalBodySchema,
   withdrawalStatusSchema,
 } from "@/modules/withdrawals/schemas";
-import {
-  toWithdrawalResponse,
-  type WithdrawalDoc,
-} from "@/modules/withdrawals/utils";
-
-type UserDoc = {
-  id?: unknown;
-  walletBalance?: unknown;
-};
+import { toWithdrawalResponse, type WithdrawalDoc } from "@/modules/withdrawals/utils";
 
 export async function POST(req: Request): Promise<NextResponse> {
   try {
