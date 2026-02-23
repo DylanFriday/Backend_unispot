@@ -109,7 +109,6 @@ export async function POST(
               studySheetId,
               amountCents: studySheet.priceCents,
               createdAt: now,
-              updatedAt: now,
             },
             { session },
           );
