@@ -14,6 +14,8 @@ import {
   type StudySheetDoc,
 } from "@/modules/study-sheets/utils";
 
+export const runtime = "nodejs";
+
 const ROUTE_PATH = "POST /moderation/study-sheets/:id/approve";
 const REQUIRED_APPROVE_ENV_VARS = ["MONGODB_URI", "JWT_SECRET"];
 
