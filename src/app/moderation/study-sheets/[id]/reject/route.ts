@@ -14,13 +14,19 @@ import {
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ): Promise<NextResponse> {
   try {
     const currentUser = requireAuth(req);
     requireRole(currentUser, ["STAFF", "ADMIN"]);
 
-    const { id } = await params;
+    const { id } = params;
+    if (process.env.NODE_ENV !== "production") {
+      console.log({
+        route: `${req.method} ${new URL(req.url).pathname}`,
+        params: { id },
+      });
+    }
     const studySheetId = parsePositiveInt(id);
     if (!studySheetId) {
       return apiError(400, "Validation failed", "Bad Request");

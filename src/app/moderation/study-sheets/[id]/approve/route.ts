@@ -57,7 +57,7 @@ function internalServerError(requestId: string): NextResponse {
 function logRouteError(
   requestId: string,
   route: string,
-  params: { id?: string; studySheetId?: number | null },
+  params: { id?: string },
   error: unknown,
 ): void {
   const err = (error && typeof error === "object"
@@ -84,12 +84,11 @@ function logRouteError(
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ): Promise<NextResponse> {
   const requestId = getRequestId(req);
   const routePath = `${req.method} ${new URL(req.url).pathname}`;
   let rawId: string | undefined;
-  let parsedStudySheetId: number | null = null;
 
   try {
     if (missingApproveEnvVars.length > 0) {
@@ -104,10 +103,12 @@ export async function POST(
     const currentUser = requireAuth(req);
     requireRole(currentUser, ["STAFF", "ADMIN"]);
 
-    const { id } = await params;
+    const { id } = params;
     rawId = id;
+    if (process.env.NODE_ENV !== "production") {
+      console.log({ route: routePath, params: { id } });
+    }
     const studySheetId = parsePositiveInt(id);
-    parsedStudySheetId = studySheetId;
     if (!studySheetId) {
       return withRequestId(
         apiError(400, "Validation failed", "Bad Request", requestId),
@@ -173,7 +174,7 @@ export async function POST(
     logRouteError(
       requestId,
       routePath,
-      { id: rawId, studySheetId: parsedStudySheetId },
+      { id: rawId },
       error,
     );
 
