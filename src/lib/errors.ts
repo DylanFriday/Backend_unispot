@@ -14,13 +14,21 @@ export function apiError(
   statusCode: number,
   message: string,
   errorName?: string,
+  requestId?: string,
 ): NextResponse {
-  return NextResponse.json(
+  const response = NextResponse.json(
     {
       statusCode,
       message,
       error: errorName ?? ERROR_NAME_BY_STATUS[statusCode] ?? "Error",
+      ...(requestId ? { requestId } : {}),
     },
     { status: statusCode },
   );
+
+  if (requestId) {
+    response.headers.set("x-request-id", requestId);
+  }
+
+  return response;
 }
