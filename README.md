@@ -9,11 +9,18 @@
 ## Common Error Shape
 ```json
 {
-  "statusCode": 400,
-  "message": "Error message",
+  "statusCode": 500,
+  "message": "Internal Server Error",
+  "requestId": "c2c08393-2f3e-4706-aa2f-34252f5ea140"
+}
+```
+- Many `4xx` responses also include:
+```json
+{
   "error": "Bad Request"
 }
 ```
+- `x-request-id` is returned in response headers for tracing logs.
 
 ## Health
 - `GET /api/health`
@@ -55,6 +62,7 @@
 - `GET /moderation/study-sheets?status=PENDING|APPROVED|REJECTED` (STAFF/ADMIN)
 - `POST /moderation/study-sheets/:id/approve` (STAFF/ADMIN)
 - `POST /moderation/study-sheets/:id/reject` (STAFF/ADMIN)
+- App Router dynamic param is `[id]` and handlers read `params.id`.
 
 ## Admin Payments
 - `GET /admin/payments?status=PENDING|APPROVED|RELEASED` (ADMIN)
@@ -111,9 +119,21 @@
 
 ## Environment Variables
 - `MONGODB_URI`
-- `JWT_SECRET` (optional, defaults to `dev-secret`)
+- `JWT_SECRET` (required in production for protected `/api/*` middleware auth)
 - `PROMPTPAY_PHONE`
 - `CORS_ORIGIN`
+
+## API Prefix Notes
+- Route handlers are defined under `src/app/*` (for example `/moderation/study-sheets/:id/approve`).
+- If you call endpoints as `/api/...`, ensure your ingress/proxy rewrites `/api/*` to app routes.
+- Health route is explicitly `/api/health`.
+
+## Troubleshooting
+- If you get `500` with transaction failures, use `requestId` from response and inspect logs:
+```bash
+docker logs Backend_unispot 2>&1 | rg "<requestId>"
+```
+- Transaction logs include structured fields: `requestId`, `route`, `errorName`, `errorMessage`, `errorStack`, `errorCode`, and `cause`.
 
 ## Default Test Accounts (Local Dev)
 - Admin
