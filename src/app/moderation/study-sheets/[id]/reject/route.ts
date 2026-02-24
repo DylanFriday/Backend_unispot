@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { requireRole } from "@/lib/auth/requireRole";
@@ -12,15 +12,17 @@ import {
   parsePositiveInt,
 } from "@/modules/study-sheets/utils";
 
+type Ctx = { params: Promise<{ id: string }> };
+
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } },
+  req: NextRequest,
+  { params }: Ctx,
 ): Promise<NextResponse> {
   try {
     const currentUser = requireAuth(req);
     requireRole(currentUser, ["STAFF", "ADMIN"]);
 
-    const { id } = params;
+    const { id } = await params;
     if (process.env.NODE_ENV !== "production") {
       console.log({
         route: `${req.method} ${new URL(req.url).pathname}`,

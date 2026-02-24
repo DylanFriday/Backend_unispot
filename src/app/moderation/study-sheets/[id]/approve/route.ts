@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { requireRole } from "@/lib/auth/requireRole";
@@ -15,6 +15,7 @@ import {
 } from "@/modules/study-sheets/utils";
 
 export const runtime = "nodejs";
+type Ctx = { params: Promise<{ id: string }> };
 
 const ROUTE_PATH = "POST /moderation/study-sheets/:id/approve";
 const REQUIRED_APPROVE_ENV_VARS = ["MONGODB_URI", "JWT_SECRET"];
@@ -83,8 +84,8 @@ function logRouteError(
 }
 
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } },
+  req: NextRequest,
+  { params }: Ctx,
 ): Promise<NextResponse> {
   const requestId = getRequestId(req);
   const routePath = `${req.method} ${new URL(req.url).pathname}`;
@@ -103,7 +104,7 @@ export async function POST(
     const currentUser = requireAuth(req);
     requireRole(currentUser, ["STAFF", "ADMIN"]);
 
-    const { id } = params;
+    const { id } = await params;
     rawId = id;
     if (process.env.NODE_ENV !== "production") {
       console.log({ route: routePath, params: { id } });
