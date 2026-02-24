@@ -1,6 +1,6 @@
 import { type ClientSession, type Db } from "mongodb";
 
-import { getClient, getDb } from "@/lib/db";
+import { getDb, getMongoClient, getMongoClientId } from "@/lib/db";
 
 type TransactionHandler<T> = (session: ClientSession, db: Db) => Promise<T>;
 
@@ -28,9 +28,16 @@ export async function withTransaction<T>(
   handler: TransactionHandler<T>,
   context?: TransactionContext,
 ): Promise<T> {
-  const client = await getClient();
+  const client = await getMongoClient();
   const db = getDb();
+  const clientId = getMongoClientId();
   const session = client.startSession();
+  console.info({
+    requestId: context?.requestId ?? "unknown-request-id",
+    route: context?.route ?? "unknown-route",
+    message: "Transaction session created",
+    mongoClientId: clientId,
+  });
 
   try {
     session.startTransaction();
