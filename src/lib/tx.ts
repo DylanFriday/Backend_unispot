@@ -1,7 +1,6 @@
 import { type ClientSession, type Db } from "mongodb";
 
 import { getClient, getDb } from "@/lib/db";
-import { apiError } from "@/lib/errors";
 
 type TransactionHandler<T> = (session: ClientSession, db: Db) => Promise<T>;
 
@@ -17,7 +16,14 @@ export async function withTransaction<T>(
     const result = await handler(session, db);
     await session.commitTransaction();
     return result;
-  } catch (error) {
+  } catch (err) {
+    const txErr = err as {
+      stack?: unknown;
+      code?: unknown;
+      message?: unknown;
+      meta?: unknown;
+    } | null | undefined;
+
     try {
       if (session.inTransaction()) {
         await session.abortTransaction();
@@ -26,15 +32,18 @@ export async function withTransaction<T>(
       // Ignore abort failure; original failure is more important.
     }
 
-    if (error instanceof Response) {
-      throw error;
+    console.error("TRANSACTION FAILED");
+    console.error(err);
+    console.error(txErr?.stack);
+    console.error(txErr?.code);
+    console.error(txErr?.message);
+    console.error(txErr?.meta);
+
+    if (err instanceof Response) {
+      throw err;
     }
 
-    throw apiError(
-      500,
-      "Transaction failed due to an unexpected server error",
-      "Internal Server Error",
-    );
+    throw new Error("Transaction failed due to an unexpected server error");
   } finally {
     await session.endSession();
   }
