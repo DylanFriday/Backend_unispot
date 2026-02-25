@@ -23,3 +23,4 @@ export function buildCorsHeaders(req: RequestLike): Headers {
 
   return headers;
 }
+
