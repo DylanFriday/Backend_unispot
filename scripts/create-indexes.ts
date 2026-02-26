@@ -37,7 +37,8 @@ const indexPlan: Record<string, IndexDescription[]> = {
     { key: { purchaseId: 1 }, unique: true },
     { key: { referenceCode: 1 }, unique: true },
     { key: { status: 1, createdAt: -1 } },
-    { key: { sellerId: 1, status: 1 } },
+    { key: { sellerId: 1, createdAt: -1 } },
+    { key: { sellerId: 1, status: 1, createdAt: -1 } },
   ],
   lease_listings: [
     { key: { status: 1, createdAt: -1 } },
