@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:indexes": "ts-node scripts/create-indexes.ts",
+    "db:indexes": "node scripts/create-indexes.js",
     "test": "vitest run"
   },
   "dependencies": {
